@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Financial OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="authView" class="auth-shell">
+  <div class="auth-card">
+    <div class="brand-mark">FO</div>
+    <p class="eyebrow">PRIVATE FINANCIAL SYSTEM</p>
+    <h1>Financial <em>OS</em></h1>
+    <p class="muted">A refined command center for your money.</p>
+    <form id="loginForm">
+      <label>Email<input id="email" type="email" required placeholder="you@example.com"></label>
+      <label>Password<input id="password" type="password" required placeholder="••••••••"></label>
+      <button class="primary full" type="submit">Enter Financial OS</button>
+      <p id="loginError" class="error"></p>
+    </form>
+  </div>
+</div>
+
+<div id="appView" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand"><span>FO</span><div><strong>Financial OS</strong><small>Private finance</small></div></div>
+    <nav>
+      <button class="nav active" data-page="dashboard">Overview</button>
+      <button class="nav" data-page="transactions">Transactions</button>
+      <button class="nav" data-page="forecast">Forecast</button>
+      <button class="nav" data-page="analytics">Analytics</button>
+      <button class="nav" data-page="owners">Owners</button>
+      <button class="nav" data-page="storages">Storages</button>
+      <button class="nav" data-page="categories">Categories</button>
+      <button class="nav" data-page="recurring">Recurring</button>
+      <button class="nav" data-page="loans">Loans & receivables</button>
+    </nav>
+    <button id="logoutBtn" class="ghost">Sign out</button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><p class="eyebrow">FINANCIAL COMMAND CENTER</p><h2 id="pageTitle">Overview</h2></div>
+      <button id="newTxBtn" class="primary">+ New transaction</button>
+    </header>
+
+    <section id="dashboard" class="page">
+      <div class="hero-grid">
+        <div class="hero-card"><p class="label">NET WORTH</p><div id="netWorth" class="hero-number">0 Ar</div><p class="muted">Current financial position</p></div>
+        <div class="metric"><span>Liquid assets</span><strong id="liquidity">0 Ar</strong></div>
+        <div class="metric"><span>Receivables</span><strong id="receivables">0 Ar</strong></div>
+        <div class="metric"><span>Debts</span><strong id="debts">0 Ar</strong></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>This month · income</span><strong id="monthIncome">+0 Ar</strong></div>
+        <div class="stat"><span>This month · expenses</span><strong id="monthExpense">−0 Ar</strong></div>
+        <div class="stat"><span>Cash flow</span><strong id="cashFlow">0 Ar</strong></div>
+        <div class="stat"><span>Transactions</span><strong id="txCount">0</strong></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">EVOLUTION</p><h3>Cash position</h3></div></div><canvas id="cashChart"></canvas></div>
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">ALLOCATION</p><h3>Expenses by category</h3></div></div><canvas id="categoryChart"></canvas></div>
+      </div>
+      <div class="panel"><div class="panel-head"><div><p class="eyebrow">QUICK VIEW</p><h3>Latest movements</h3></div><button class="text-btn" data-page-link="transactions">View all</button></div><div id="quickTransactions" class="movement-list"></div></div>
+    </section>
+
+    <section id="transactions" class="page hidden"><div class="toolbar"><input id="searchTx" placeholder="Search reason, category…"><select id="typeFilter"><option value="">All movements</option><option value="income">Income</option><option value="expense">Expenses</option><option value="transfer">Transfers</option><option value="loan">Loans</option><option value="gift">Gifts</option></select><input id="fromDate" type="date"><input id="toDate" type="date"></div><div class="panel"><div id="transactionsTable"></div></div></section>
+
+    <section id="forecast" class="page hidden"><div class="forecast-cards"><div class="metric"><span>7 days</span><strong id="f7">—</strong></div><div class="metric"><span>30 days</span><strong id="f30">—</strong></div><div class="metric"><span>90 days</span><strong id="f90">—</strong></div><div class="metric"><span>12 months</span><strong id="f365">—</strong></div></div><div class="panel"><p class="eyebrow">PROJECTION</p><h3>Projected liquidity</h3><canvas id="forecastChart"></canvas><div id="forecastWarnings" class="warnings"></div></div></section>
+
+    <section id="analytics" class="page hidden"><div class="grid-2"><div class="panel"><p class="eyebrow">ANALYTICS</p><h3>Income vs expenses</h3><canvas id="incomeExpenseChart"></canvas></div><div class="panel"><p class="eyebrow">BEHAVIOUR</p><h3>Key indicators</h3><div id="analyticsList" class="insights"></div></div></div></section>
+
+    <section id="owners" class="page hidden"><div class="section-actions"><button class="primary" id="addOwnerBtn">+ Add owner</button></div><div id="ownersGrid" class="cards"></div></section>
+    <section id="storages" class="page hidden"><div class="section-actions"><button class="primary" id="addStorageBtn">+ Add storage</button></div><div id="storagesGrid" class="cards"></div></section>
+    <section id="categories" class="page hidden"><div class="section-actions"><button class="primary" id="addCategoryBtn">+ Add category</button></div><div id="categoriesGrid" class="cards"></div></section>
+    <section id="recurring" class="page hidden"><div class="section-actions"><button class="primary" id="addRecurringBtn">+ Add recurring rule</button></div><div id="recurringGrid" class="cards"></div></section>
+    <section id="loans" class="page hidden"><div class="section-actions"><button class="primary" id="addLoanBtn">+ Add loan</button></div><div id="loansGrid" class="cards"></div></section>
+  </main>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modal-card"><button id="closeModal" class="close">×</button><div id="modalContent"></div></div></div>
+<script src="app.js"></script>
+</body>
+</html>
