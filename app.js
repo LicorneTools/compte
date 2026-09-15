@@ -1,5 +1,5 @@
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://wdehjriprvukkadrmleo.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_CEDp94nnGylUliJW63q6wQ_uERbz9km';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let state={user:null,owners:[],storages:[],categories:[],transactions:[],loans:[],recurring:[],charts:{}};
