@@ -2,6 +2,11 @@ const SUPABASE_URL = 'https://wdehjriprvukkadrmleo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_CEDp94nnGylUliJW63q6wQ_uERbz9km';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Identifiants fixes
+const FIXED_EMAIL = 'marcirajaonson@gmail.com';
+const FIXED_PASSWORD = 'KangWoo#110';
+const FIXED_USER_ID = '17e80c64-946b-4af0-b317-e2e446abc6b3';
+
 let state={user:null,owners:[],storages:[],categories:[],transactions:[],loans:[],recurring:[],charts:{}};
 
 const $=id=>document.getElementById(id);
@@ -14,14 +19,25 @@ function show(id){$(id).classList.remove('hidden')} function hide(id){$(id).clas
 function openModal(html){$('modalContent').innerHTML=html;show('modal')} function closeModal(){hide('modal')}
 
 async function init(){
-  const {data:{session}}=await sb.auth.getSession();
-  if(session){state.user=session.user; show('appView');hide('authView');await loadAll();} else {show('authView');hide('appView')}
+  // Connexion automatique
+  const {data,error}=await sb.auth.signInWithPassword({email:FIXED_EMAIL,password:FIXED_PASSWORD});
+  if(error){
+    console.error('Erreur de connexion:',error.message);
+    show('authView');hide('appView');
+    $('loginError').textContent=error.message;
+    return;
+  }
+  state.user={id:FIXED_USER_ID,email:FIXED_EMAIL};
+  hide('authView');show('appView');
+  await loadAll();
 }
+
 $('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();$('loginError').textContent='';
- const {data,error}=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});
+ const {data,error}=await sb.auth.signInWithPassword({email:FIXED_EMAIL,password:FIXED_PASSWORD});
  if(error){$('loginError').textContent=error.message;return}
- state.user=data.user;hide('authView');show('appView');await loadAll();
+ state.user={id:FIXED_USER_ID,email:FIXED_EMAIL};
+ hide('authView');show('appView');await loadAll();
 });
 $('logoutBtn').onclick=async()=>{await sb.auth.signOut();location.reload()};
 $('closeModal').onclick=closeModal;$('modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
@@ -40,7 +56,7 @@ function navigate(page){
 }
 
 async function loadAll(){
- const uid=state.user.id;
+ const uid=FIXED_USER_ID;
  const [o,s,c,t,l,r]=await Promise.all([
   sb.from('owners').select('*').eq('user_id',uid).eq('is_active',true).order('name'),
   sb.from('storages').select('*').eq('user_id',uid).eq('is_active',true).order('name'),
@@ -69,7 +85,6 @@ function storageBalance(id){
 }
 function ownerTransactions(ownerId){return state.transactions.filter(t=>t.owner_id===ownerId)}
 function ownerNetWorth(ownerId){
- const ids=new Set(state.storages.filter(s=>state.owners.some(o=>o.id===ownerId)).map(s=>s.id));
  return state.transactions.reduce((sum,t)=>{
    if(t.status==='cancelled'||t.owner_id!==ownerId)return sum;
    return sum+txSigned(t);
@@ -118,7 +133,7 @@ function transactionModal(){
  <label>Reason<input name="reason" required placeholder="What happened?"></label>
  <label class="full-row">Description<textarea name="description"></textarea></label>
  <button class="primary full-row" type="submit">Save movement</button></form>`);
- $('txForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const row=Object.fromEntries(f);row.user_id=state.user.id;row.amount=Number(row.amount);row.category_id=row.category_id||null;row.source_storage_id=row.source_storage_id||null;row.destination_storage_id=row.destination_storage_id||null;const {error}=await sb.from('transactions').insert(row);if(error){alert(error.message);return}closeModal();await loadAll()};
+ $('txForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const row=Object.fromEntries(f);row.user_id=FIXED_USER_ID;row.amount=Number(row.amount);row.category_id=row.category_id||null;row.source_storage_id=row.source_storage_id||null;row.destination_storage_id=row.destination_storage_id||null;const {error}=await sb.from('transactions').insert(row);if(error){alert(error.message);return}closeModal();await loadAll()};
 }
 
 function renderOwners(){
@@ -139,7 +154,7 @@ function renderLoans(){
 
 function modalSimple(title,fields,table,after){
  openModal(`<h3>${title}</h3><form id="simpleForm" class="form-grid">${fields}<button class="primary full-row">Save</button></form>`);
- $('simpleForm').onsubmit=async e=>{e.preventDefault();const row=Object.fromEntries(new FormData(e.target));row.user_id=state.user.id;const {error}=await sb.from(table).insert(row);if(error){alert(error.message);return}closeModal();await loadAll();after?.()};
+ $('simpleForm').onsubmit=async e=>{e.preventDefault();const row=Object.fromEntries(new FormData(e.target));row.user_id=FIXED_USER_ID;const {error}=await sb.from(table).insert(row);if(error){alert(error.message);return}closeModal();await loadAll();after?.()};
 }
 $('addOwnerBtn').onclick=()=>modalSimple('New owner',`<label>Name<input name="name" required></label><label>Type<select name="owner_type"><option value="individual">Individual</option><option value="company">Company</option><option value="other">Other</option></select></label><label class="full-row">Description<input name="description"></label>`,'owners');
 $('addStorageBtn').onclick=()=>modalSimple('New storage',`<label>Name<input name="name" required></label><label>Type<select name="storage_type"><option>bank</option><option>cash</option><option>mobile_money</option><option>savings</option><option>investment</option><option>other</option></select></label><label>Currency<input name="currency" value="MGA"></label><label>Description<input name="description"></label>`,'storages');
